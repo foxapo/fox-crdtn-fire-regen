@@ -1,0 +1,5 @@
+.vscode/
+*.meta
+.idea/
+*.tga
+*.edds.meta
