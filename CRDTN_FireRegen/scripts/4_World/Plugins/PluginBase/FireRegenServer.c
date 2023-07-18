@@ -27,13 +27,10 @@ class FireRegenServer : FireRegenBase
 
     void ~FireRegenServer()
     {
-
         if (GetGame().IsClient())
         {
             return;
         }
-
-        FireRegenConfig.Save(m_FireRegenConfig);
         delete m_FireRegenConfig;
     }
 
