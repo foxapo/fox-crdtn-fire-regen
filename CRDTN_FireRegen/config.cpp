@@ -28,6 +28,12 @@ class CfgMods
 				files[] = {"CRDTN_FireRegen/scripts/4_World"};
 			};
 
+			class missionScriptModule
+			{
+				value = "";
+				files[] = {"CRDTN_FireRegen/scripts/5_Mission"};
+			};
+
 			class imageSets
 			{
 				files[] = {};
