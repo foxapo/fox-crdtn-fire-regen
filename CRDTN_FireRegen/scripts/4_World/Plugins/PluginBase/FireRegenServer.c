@@ -34,7 +34,7 @@ class FireRegenServer : FireRegenBase
         delete m_FireRegenConfig;
     }
 
-    void OnPlayerConnected(ref PlayerIdentity identity, ref Object player)
+    void OnPlayerConnected( PlayerIdentity identity,  Object player)
     {
         if (GetGame().IsServer())
         {

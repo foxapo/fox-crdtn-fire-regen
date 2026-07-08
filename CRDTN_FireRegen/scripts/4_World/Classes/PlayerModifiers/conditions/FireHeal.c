@@ -1,22 +1,22 @@
 class FireHeal : ModifierBase
 {
-    private  ref FireRegenConfig    m_FireRegenConfig                 = NULL;
-    private  float                  m_HealTreshold                    = 100;
-    private  float                  m_BloodTreshold                   = 5000;
-    private  EStatLevels            m_HungerThreshold                 = EStatLevels.HIGH;
-    private  EStatLevels            m_ThirstThreshold                 = EStatLevels.HIGH;
-    private  float                  m_HealRadius                      = 3;
-    private  float                  m_HealRatePerTick                 = 0.25;
-    private  float                  m_BloodRatePerTick                = 0.25;
-    private  bool                   m_IndoorOnly                      = true;
+    private ref FireRegenConfig m_FireRegenConfig = NULL;
+    private float m_HealTreshold = 100;
+    private float m_BloodTreshold = 5000;
+    private EStatLevels m_HungerThreshold = EStatLevels.HIGH;
+    private EStatLevels m_ThirstThreshold = EStatLevels.HIGH;
+    private float m_HealRadius = 3;
+    private float m_HealRatePerTick = 0.25;
+    private float m_BloodRatePerTick = 0.25;
+    private bool m_IndoorOnly = true;
     // Notifications
-    private  string                 m_NotificationHealEnded           =  "";
-    private  string                 m_NotificationHealStarted         =  "";
-    private  string                 m_NotificationHungerAndThirst     =  "";
-    private  string                 m_NotificationHealthIncrement     =  "";
-    private  string                 m_NotificationBloodIncrement      =  "";
-    private  string                 m_NotificationHealthReached       =  "";
-    private  string                 m_NotificationBloodReached        =  "";
+    private string m_NotificationHealEnded = "";
+    private string m_NotificationHealStarted = "";
+    private string m_NotificationHungerAndThirst = "";
+    private string m_NotificationHealthIncrement = "";
+    private string m_NotificationBloodIncrement = "";
+    private string m_NotificationHealthReached = "";
+    private string m_NotificationBloodReached = "";
 
     override void Init()
     {
@@ -27,68 +27,57 @@ class FireHeal : ModifierBase
 
     override bool ActivateCondition(PlayerBase player)
     {
-        if(!IsFireplaceNearby(player))
+        if (!IsFireplaceNearby(player))
             return false;
 
-        if(IsHungryOrThirsty(player))
+        if (IsHungryOrThirsty(player))
         {
             this.NotifyPlayer(player, m_NotificationHungerAndThirst);
             return false;
         }
 
-        return !IsFullOnHealthAndBlood(player);
+        return true;
     }
 
     override void OnActivate(PlayerBase player)
     {
-        this.NotifyPlayer(player, m_NotificationHealStarted);
+        // this.NotifyPlayer(player, m_NotificationHealStarted);
+        player.SetCampfireStat(true);
     }
 
     override void OnDeactivate(PlayerBase player)
     {
-        this.NotifyPlayer(player, m_NotificationHealEnded);
+        // this.NotifyPlayer(player, m_NotificationHealEnded);
+        player.SetCampfireStat(false);
     }
 
     override bool DeactivateCondition(PlayerBase player)
     {
-        return !IsFireplaceNearby(player) || IsFullOnHealthAndBlood(player);
+        return !IsFireplaceNearby(player);
     }
 
     override void OnTick(PlayerBase player, float deltaT)
     {
-
-        if(IsHungryOrThirsty(player))
+        if (IsHungryOrThirsty(player) && !IsFullOnHealthAndBlood(player))
         {
-            this.NotifyPlayer(player, m_NotificationHungerAndThirst);
-            return;
-        }
-        
-        if(m_HealRatePerTick > 0)
-        {
-            float currenthealth = player.GetHealth("GlobalHealth", "Health");
-            if(currenthealth < m_HealTreshold)
+            if (m_HealRatePerTick > 0)
             {
-                player.SetHealth("GlobalHealth", "Health", (currenthealth + m_HealRatePerTick));
-                this.NotifyPlayer(player, m_NotificationHealthIncrement);
-            }else {
-                this.NotifyPlayer(player, m_NotificationHealthReached);
-            }
-        }
+                float currenthealth = player.GetHealth("GlobalHealth", "Health");
+                float currentblood = player.GetHealth("GlobalHealth", "Blood");
 
-        if(m_HealRatePerTick > 0)
-        {
-            float currentblood = player.GetHealth("GlobalHealth", "Blood");
-            if(currentblood < m_BloodTreshold)
-            {
-                player.SetHealth("GlobalHealth", "Blood", (currentblood + m_BloodRatePerTick));
-                this.NotifyPlayer(player, m_NotificationBloodIncrement);
-            }
-            else {
-                this.NotifyPlayer(player, m_NotificationBloodReached);
+                if (currenthealth < m_HealTreshold)
+                {
+                    player.SetHealth("GlobalHealth", "Health", (currenthealth + m_HealRatePerTick));
+                }
+
+                if (currentblood < m_BloodTreshold)
+                {
+                    player.SetHealth("GlobalHealth", "Blood", (currentblood + m_BloodRatePerTick));
+                }
             }
         }
     }
-    
+
     private bool IsFullOnHealthAndBlood(PlayerBase player)
     {
         return player.GetHealth("GlobalHealth", "Health") >= m_HealTreshold && player.GetHealth("GlobalHealth", "Blood") >= m_BloodTreshold;
@@ -115,7 +104,7 @@ class FireHeal : ModifierBase
 
                 FireplaceBase fireplace = FireplaceBase.Cast(ent);
                 if (m_IndoorOnly)
-                {   // ONLY INDOOR CHECK
+                { // ONLY INDOOR CHECK
                     if (!fireplace.IsFireplaceIndoor() && !fireplace.IsIndoorOven())
                     {
                         continue;
@@ -127,7 +116,12 @@ class FireHeal : ModifierBase
                     continue;
                 }
 
-                if (vector.DistanceSq(player.GetPosition(), ent.GetPosition()) > m_HealRadius)
+                if (USE_DEBUG_BROADCAST)
+                {
+                    player.MessageImportant("Fireplace found: " + ent.GetType() + " at distance: " + vector.Distance(player.GetPosition(), ent.GetPosition()));
+                }
+
+                if (vector.Distance(player.GetPosition(), ent.GetPosition()) > m_HealRadius)
                 {
                     continue;
                 }
